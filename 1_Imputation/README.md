@@ -5,6 +5,8 @@
   a) removeCaG-2018.sh 
   b) split-chr.sh
   c) index-vcf.sh
+  d) R2vsAlleleFreq.sh
+  e) hexPlot.R
 
 - Settings for imputation with TopMed:
 
@@ -36,7 +38,7 @@
     6. typed-only text file
  
 - If a user has vcf.gz and info.gz files that were all generated from TopMed, then there is a tool called IMMerge that may work well (the CartaGene files we have, do not have the info files available)
-- We are going to proceed with vcftools:
+- We are going to proceed with vcftools (more on this in 2_Merging):
     1.	For the Axiom 2.0 CanPath files that I imputed myself with TopMed
                 a)	Plot imputation R2 vs allele frequency
                 b)	Perform QC on this set of files with the following:
