@@ -2,11 +2,11 @@
 - In 2023, we received a merged dataset for all CartaGene (CaG) samples from Quebec (this included the CaG samples from 2018, N = 19,916)
 - So we removed CaG samples from the 2018 datasets, performed imputation with TopMed, and then merged with the 2023 CaG samples using IMMerge (N = 23,750)
 - Order of scripts (in preparation for imputation with TopMed server):
-    a) removeCaG-2018.sh
-    b) split-chr.sh
-    c) index-vcf.sh
-    d) R2vsAlleleFreq.sh
-    e) hexPlot.R
+   1. removeCaG-2018.sh
+   2. split-chr.sh
+   3. index-vcf.sh
+   4. R2vsAlleleFreq.sh
+   5. hexPlot.R
 
 - Settings for imputation with TopMed:
 
