@@ -6,39 +6,48 @@
   b) split-chr.sh
   c) index-vcf.sh
 
-  Settings for imputation with TopMed:
+- Settings for imputation with TopMed:
 
-1) Reference Panel: TOPMed r2
-2) Array Build: GRCh19/hg37
-3) Rsq Filter: off
-4) Phasing: Eagle v2.4 (phased output)
-5) Population: vs. TOPMed Panel
-6) Mode: Quality Control & Imputation
-7) AES 256 encryption: off
-8) Generate Meta-imputation file: on
-9) Results:
-    a) Quality control report
-       - In the QC step, TopMed checks each variant and excludesit in the case of: a) Contains invalid alleles b) Duplicates c) Indels d) Monomorphic sites e) Allele mismatch between reference panel and uploaded data f) SNP call rate <90%
+  - Settings for the imputation:
+    1. Reference Panel: TOPMed r2
+    2. Array Build: GRCh19/hg37
+    3. Rsq Filter: off
+    4. Phasing: Eagle v2.4 (phased output)
+    5. Population: vs. TOPMed Panel
+    6. Mode: Quality Control & Imputation
+    7. AES 256 encryption: off
+    8. Generate Meta-imputation file: on
+- Results:
+    1. Quality control report
+       - In the QC step, TopMed checks each variant and excludesit in the case of:
+         a) Contains invalid alleles
+         b) Duplicates
+         c) Indels
+         d) Monomorphic sites
+         e) Allele mismatch between reference panel and uploaded data
+         f) SNP call rate <90%
        - All filtered variants are listed in a file called "statistics.txt" which can be downloaded by clicking on the provided link
-    b) Compressed chromosomal data
-      - If imputation was successful, TopMed compresses and encrypts the data and sends the user a random password via email (all data is deleted after 7 days!)
-      - Note, the compressed chromosome folders contain .dose.vcf.gz, .empiricalDose.vcf.gz and .info.gz files
-    c) Chunks exluded text file
-    d) md5sum report
-    e) snps-excluded text file
-    f) typed-only text file
+    2. Compressed chromosomal data
+       - If imputation was successful, TopMed compresses and encrypts the data and sends the user a random password via email (all data is deleted after 7 days!)
+       - Note, the compressed chromosome folders contain .dose.vcf.gz, .empiricalDose.vcf.gz and .info.gz files
+    3. Chunks exluded text file
+    4. md5sum report
+    5. snps-excluded text file
+    6. typed-only text file
+ 
+- If a user has vcf.gz and info.gz files that were all generated from TopMed, then there is a tool called IMMerge that may work well (the CartaGene files we have, do not have the info files available)
+- We are going to proceed with vcftools:
+    1.	For the Axiom 2.0 CanPath files that I imputed myself with TopMed
+                a)	Plot imputation R2 vs allele frequency
+                b)	Perform QC on this set of files with the following:
+                    i.	MAF
+                    ii.	HWE
+                    iii.	SNP-missingness
+    2.	From the other CartaGene files for which I do not have the imputation results:
+                a)	Extract the SNP list from point 1 above
+                    i.	Double check MAF, HWE and missingness to be sure this SNP list is “high quality” in both cohorts
+    3.	Merge cohorts, perform PCA (x2) and GWAS
+  - If someone wanted to perform all of the QC within PLINK, this link is helpful for learning PLINK's order of operations: https://www.cog-genomics.org/plink/2.0/order
 
-If a user has vcf.gz and info.gz files that were all generated from TopMed, then there is a tool called IMMerge that may work well (the CartaGene files we have, do not have the info files available)
-We are going to proceed with vcftools:
-For the Axiom 2.0 CanPath files that I imputed myself with TopMed
-  a)    Plot imputation R2 vs allele frequency (R2vsAlleleFreq.sh and hexPlot.R)
-  b)    Perform QC on this set of files with the following:
-      i.    MAF
-      ii.    HWE
-      iii.    SNP-missingness
-From the other CartaGene files for which I do not have the imputation results:
-  a)    Extract the SNP list from point 1 above
-      i.    Double check MAF, HWE and missingness to be sure this SNP list is “high quality” in both cohorts
-Merge cohorts, perform PCA (x2) and GWAS
-If someone wanted to perform all of the QC within PLINK, this link is helpful for learning PLINK's order of operations: https://www.cog-genomics.org/plink/2.0/order
+
   
