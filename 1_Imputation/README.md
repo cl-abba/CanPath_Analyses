@@ -43,10 +43,13 @@
                     i.	MAF
                     ii.	HWE
                     iii.	SNP-missingness
-    2.	From the other CartaGene files for which I do not have the imputation results:
+
+      	![download](https://github.com/user-attachments/assets/1f3da675-1234-406b-b787-ef2676fdfd09)
+
+    3.	From the other CartaGene files for which I do not have the imputation results:
                 a)	Extract the SNP list from point 1 above
                     i.	Double check MAF, HWE and missingness to be sure this SNP list is “high quality” in both cohorts
-    3.	Merge cohorts, perform PCA (x2) and GWAS
+    4.	Merge cohorts, perform PCA (x2) and GWAS
 - If someone wanted to perform all of the QC within PLINK, this link is helpful for learning PLINK's order of operations: https://www.cog-genomics.org/plink/2.0/order
 
 
