@@ -16,10 +16,13 @@ Additional notes:
 
 The methodology is as follows:
 
-1. Data storage, handling and cleaning - PLINK, bcftools, R
-2. Imputation - TopMed server
-3. Pruning and quality control (QC) - PLINK, bcftools, vcftools
-4. GWAS - SAIGE
-5. Visualization - R
-6. Postliminary analyses (COJO, FINEMAP, genetic correlation, multi-trait association analysis) - GCTA, LDSTORE2, FINEMAP, LDSC, CPASSOC 
+1) Impute CanPath arrays (GSA and Axiom UKBB) with TopMed (remove repeated CaG (Quebec) samples)
+2) Merge imputed CanPath_GSA + CanPath_Axiom_UKBB + CartaGene 
+3) Pruning and QC on imputed genotype data
+4) PCA
+5) Modify the .vcf files to reflect the project: a) Eye colour, b) Hair colour, c) Skin response to the sun
+6) Run the GWAS for the different arrays and models
+7) Run GCTA COJO (conditional analysis) for signficant regions
+8) Run FINEMAP for signficant regions
+9) Genetic correlation and multi-trait analysis (LDSC + CPASSOC)
 
