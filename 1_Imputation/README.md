@@ -1,12 +1,12 @@
 - In 2018, we received CanPath datasets from all provinces. The data was dispersed among a few different genotyping chips and Frida conducted thorough QC and consolodated the samples for which eye colour data was available into two datasets GSA and Axiom UKBB (N = 12,998 with CaG and N = 3,834 without CaG)
 - In 2023, we received a merged dataset for all CartaGene (CaG) samples from Quebec (this included the CaG samples from 2018, N = 19,916)
 - So we removed CaG samples from the 2018 datasets, performed imputation with TopMed, and then merged with the 2023 CaG samples using IMMerge (N = 23,750)
-    - Order of scripts (in preparation for imputation with TopMed server):
-     a) removeCaG-2018.sh
-     b) split-chr.sh
-     c) index-vcf.sh
-     d) R2vsAlleleFreq.sh
-     e) hexPlot.R
+- Order of scripts (in preparation for imputation with TopMed server):
+    a) removeCaG-2018.sh
+    b) split-chr.sh
+    c) index-vcf.sh
+    d) R2vsAlleleFreq.sh
+    e) hexPlot.R
 
 - Settings for imputation with TopMed:
 
