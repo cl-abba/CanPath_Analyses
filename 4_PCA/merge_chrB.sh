@@ -1,0 +1,37 @@
+#!/bin/bash
+
+#SBATCH --account=def-eparra
+#SBATCH --time=3:00:00
+#SBATCH --job-name=merge-chr
+#SBATCH --output=merge-chr.out
+#SBATCH --error=merge-chr.err
+#SBATCH --mail-user=c.abbatangelo@mail.utoronto.ca
+#SBATCH --mail-type=ALL
+#SBATCH --mem=80G
+
+module load StdEnv/2020
+module load plink/1.9b_6.21-x86_64
+
+plink --bfile chr1_merged_AllCanPath_clean_EUR_pruned --merge-list chrom_listB.txt --make-bed --out AllChr_CanPath_EUR_pruned
+
+chr2_merged_AllCanPath_clean_EUR_pruned
+chr3_merged_AllCanPath_clean_EUR_pruned
+chr4_merged_AllCanPath_clean_EUR_pruned
+chr5_merged_AllCanPath_clean_EUR_pruned
+chr6_merged_AllCanPath_clean_EUR_pruned
+chr7_merged_AllCanPath_clean_EUR_pruned
+chr8_merged_AllCanPath_clean_EUR_pruned
+chr9_merged_AllCanPath_clean_EUR_pruned
+chr10_merged_AllCanPath_clean_EUR_pruned
+chr11_merged_AllCanPath_clean_EUR_pruned
+chr12_merged_AllCanPath_clean_EUR_pruned
+chr13_merged_AllCanPath_clean_EUR_pruned
+chr14_merged_AllCanPath_clean_EUR_pruned
+chr15_merged_AllCanPath_clean_EUR_pruned
+chr16_merged_AllCanPath_clean_EUR_pruned
+chr17_merged_AllCanPath_clean_EUR_pruned
+chr18_merged_AllCanPath_clean_EUR_pruned
+chr19_merged_AllCanPath_clean_EUR_pruned
+chr20_merged_AllCanPath_clean_EUR_pruned
+chr21_merged_AllCanPath_clean_EUR_pruned
+chr22_merged_AllCanPath_clean_EUR_pruned
