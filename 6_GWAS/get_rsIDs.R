@@ -1,62 +1,109 @@
 #####- Download hg38 reference from UCSC (in terminal) :curl -O https://hgdownload.soe.ucsc.edu/goldenPath/hg38/database/snp151.txt.gz
 
-setwd("/Volumes/LaCie/CanPath_Project/Multi_Trait_CanPath")
+# Load required packages
+library(data.table)
 
-# ---- File paths (modify if needed) ----
-summary_file <- "/Volumes/LaCie/CanPath_Project/Multi_Trait_CanPath/CanPath_HairColour_M3_Linear_SumStats_Z.txt"
-#bed_file <- "/Volumes/LaCie/CanPath_Project/Imputed_Files/EUR_BothSexes_vcf/snp151_rsids_hg38.bed"
-output_file <- "/Volumes/LaCie/CanPath_Project/Multi_Trait_CanPath/CanPath_HairColour_M3_Linear_SumStats_Z_Annotated.txt"
+# -------------------------------
+# Step 1: Load your summary stats
+# -------------------------------
+summary_file <- "/Volumes/LaCie/CanPath_Project/Clean_SumStats/CanPath_EyeColour_M3_Linear_SumStats_Z.txt"
+summary_df <- fread(summary_file)
 
-# ---- Load summary stats ----
-summary_df <- read.table(summary_file, header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+# Ensure chromosome is character (to match 'chr' strings in BED)
+summary_df[, CHR := as.character(CHR)]
 
-# Ensure CHR is character for merging
-summary_df$CHR <- as.character(summary_df$CHR)
+# Create fallback ID for unmatched SNPs
+summary_df[, SNP_fallback_hg38 := paste0(CHR, ":", BP, ":", Allele1, ":", Allele2)]
 
-# Create fallback SNP ID
-summary_df$SNP_fallback <- paste(summary_df$CHR, summary_df$BP, summary_df$Allele1, summary_df$Allele2, sep = ":")
+# Create matching key in format like "chr1:12345"
+summary_df[, key := paste0("chr", CHR, ":", BP)]
+lookup_keys <- unique(summary_df$key)
 
-# ---- Load BED file ----
+# -----------------------------------------------------
+# Step 2: Read the massive BED file in memory-safe chunks
+# -----------------------------------------------------
+bed_path <- "/Volumes/LaCie/CanPath_Project/Imputed_Files/EUR_BothSexes_vcf/snp151_rsids_hg38.bed"
+bed_conn <- file(bed_path, open = "r")  # Open the file connection
 
-write.table(unique(summary_df[, c("CHR", "BP")]),
-            file = "summary_chr_pos.txt", sep = "\t", quote = FALSE, row.names = FALSE, col.names = FALSE) # For filtering in terminal
+chunk_size <- 1e6  # Read 1 million lines at a time
+filtered_bed_chunks <- list()  # To collect matched chunks
+chunk_count <- 0  # Counter
 
-# Then in terminal: 
+cat("📦 Starting chunked reading of BED file...\n")
 
-awk 'NR==FNR {a[$1":"$2]; next} ($1 ~ /^chr/) {key=substr($1,4)":"$3; if (key in a) print}' \
->   ~/summary_chr_pos.txt \
->   snp151_rsids_hg38.bed > snp151_filtered.bed
+repeat {
+  # Read the next chunk of lines
+  lines <- readLines(bed_conn, n = chunk_size)
+  if (length(lines) == 0) break  # Exit when no more lines
+  
+  # Convert chunk into a data.table
+  bed_chunk <- fread(text = lines, header = FALSE, sep = "\t",
+                     col.names = c("CHR", "START", "END", "rsID"))
+  
+  # Create key for matching (e.g., "chr1:12345")
+  bed_chunk[, key := paste0(CHR, ":", END)]
+  
+  # Filter to rows that match any SNP position in summary stats
+  matched_chunk <- bed_chunk[key %in% lookup_keys]
+  
+  # If matches found, store them
+  if (nrow(matched_chunk) > 0) {
+    filtered_bed_chunks[[length(filtered_bed_chunks) + 1]] <- matched_chunk
+  }
+  
+  chunk_count <- chunk_count + 1
+  cat("✅ Processed chunk", chunk_count, "- matched rows so far:", sum(sapply(filtered_bed_chunks, nrow)), "\n")
+}
 
-bed_df <- read.table("/Volumes/LaCie/CanPath_Project/Imputed_Files/EUR_BothSexes_vcf/snp151_filtered.bed", header = FALSE, sep = "\t",
-                     col.names = c("CHR", "START", "END", "rsID"), stringsAsFactors = FALSE)
+# Close file connection
+close(bed_conn)
 
-# Remove "chr" prefix from CHR
-#bed_df$CHR <- gsub("^chr", "", bed_df$CHR)
+# ----------------------------------------------
+# Step 3: Combine all matching chunks into one table
+# ----------------------------------------------
+bed_filtered_df <- rbindlist(filtered_bed_chunks)
+bed_filtered_df[, CHR := gsub("^chr", "", CHR)]  # remove 'chr' prefix to match summary
 
-# Merge by CHR and BP (BED END matches VCF POS)
-annotated_df <- merge(summary_df, bed_df, by.x = c("CHR", "BP"), by.y = c("CHR", "END"), all.x = TRUE)
+# ----------------------------------------------
+# Step 4: Merge rsIDs into summary stats
+# ----------------------------------------------
 
-# Create MarkerID
-annotated_df$MarkerID <- ifelse(!is.na(annotated_df$rsID), annotated_df$rsID, annotated_df$SNP_fallback)
+# Merge by CHR and BP (BED END == VCF POS)
+merged_df <- merge(summary_df, bed_filtered_df, by.x = c("CHR", "BP"), by.y = c("CHR", "END"), all.x = TRUE)
 
-# Optional: reorder columns (put MarkerID after SNP)
-snp_idx <- which(names(annotated_df) == "SNP")
-reordered_cols <- append(names(annotated_df), "MarkerID", after = snp_idx)
-reordered_cols <- reordered_cols[!duplicated(reordered_cols)]
-annotated_df <- annotated_df[, reordered_cols]
+# Create MarkerID: use rsID where available, fallback otherwise
+merged_df[, MarkerID_hg38 := ifelse(!is.na(rsID), rsID, SNP_fallback_hg38)]
 
-# ---- Summary stats for matching ----
-num_total <- nrow(annotated_df)
-num_with_rsID <- sum(!is.na(annotated_df$rsID))
+# Clean up intermediate columns (drop only if they exist)
+cols_to_drop <- intersect(c("SNP_fallback_hg38", "key", "START", "rsID"), colnames(merged_df))
+merged_df[, (cols_to_drop) := NULL]
+
+if ("SNP" %in% names(merged_df)) {
+  snp_idx <- which(names(merged_df) == "SNP")
+  # Move MarkerID just after SNP
+  col_order <- append(names(merged_df), "MarkerID_hg38", after = snp_idx)
+  col_order <- unique(col_order)  # Ensure no duplicates
+  setcolorder(merged_df, col_order)
+}
+
+# ----------------------------------------------
+# Step 5: Save to a new annotated file
+# ----------------------------------------------
+output_file <- "/Volumes/LaCie/CanPath_Project/Clean_SumStats/CanPath_EyeColour_M3_Linear_SumStats_Z_Annotated.txt"
+fwrite(merged_df, file = output_file, sep = "\t", quote = FALSE)
+
+# ----------------------------------------------
+# Step 6: Print summary of how many rsIDs matched
+# ----------------------------------------------
+num_total <- nrow(merged_df)
+num_with_rsID <- sum(merged_df$MarkerID_hg38 != merged_df$SNP)
 num_with_fallback <- num_total - num_with_rsID
 
-cat("🔍 Summary:\n")
-cat("  Total variants: ", num_total, "\n")
-cat("  rsID matches:   ", num_with_rsID, "\n")
-cat("  Fallback IDs:   ", num_with_fallback, "\n")
+cat("\n🔍 Annotation Summary:\n")
+cat("  Total SNPs:           ", num_total, "\n")
+cat("  Matched rsIDs:        ", num_with_rsID, "\n")
+cat("  Used fallback format: ", num_with_fallback, "\n")
+cat("  Output file saved to: ", output_file, "\n")
 
-# ---- Save to file ----
-write.table(annotated_df, file = output_file, sep = "\t", quote = FALSE, row.names = FALSE)
 
-cat("✅ Annotated file saved to:\n", output_file, "\n")
 
